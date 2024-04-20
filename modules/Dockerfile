@@ -1,6 +1,6 @@
 ARG DOCKER_HUB_PROXY=""
 
-FROM "${DOCKER_HUB_PROXY}python:3.11-slim-bullseye" as python-build
+FROM "${DOCKER_HUB_PROXY}python:3-slim" as python-build
     ENV DEBIAN_FRONTEND noninteractive
     ARG MODULES_TAG
     ARG MODULES_COMMIT
@@ -58,7 +58,7 @@ EOF
         rm -rf /srv/faup
 EOF
 
-FROM "${DOCKER_HUB_PROXY}python:3.11-slim-bullseye"
+FROM "${DOCKER_HUB_PROXY}python:3-slim"
     ENV DEBIAN_FRONTEND noninteractive
 
     RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -77,7 +77,7 @@ FROM "${DOCKER_HUB_PROXY}python:3.11-slim-bullseye"
     # Since we compile faup ourselves and lua is not required anymore, we can load our own library 
     #   and skip the pre-compiled blob to improve compatibility with other architectures like ARM
     RUN sed -i s/LoadLibrary\(LOAD_LIB\)/LoadLibrary\(\"\\/usr\\/local\\/lib\\/libfaupl.so\"\)/ \
-        /usr/local/lib/python3.11/site-packages/pyfaup/__init__.py
+        /usr/local/lib/python3.*/site-packages/pyfaup/__init__.py
 
     # Disable (all) warnings raised when using 'future'
     RUN sed -i '/import sys/a import warnings\nwarnings.warn = lambda *args, **kwargs: None' \
