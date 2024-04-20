@@ -22,8 +22,9 @@ FROM "${DOCKER_HUB_PROXY}python:3-slim" as python-build
     
     RUN mkdir /wheels
     WORKDIR /srv
-
-    RUN [ -z $MODULES_TAG ] && MODULES_TAG=$(git ls-remote -tq --sort=-v:refname https://github.com/MISP/misp-modules.git | grep -Posm1 'v2\.\d+\.\d+')
+    RUN MODULES_TEST=$(git ls-remote -tq --sort=-v:refname https://github.com/MISP/misp-modules.git | grep -Posm1 'v2\.\d+\.\d+')
+    RUN [ -z $MODULES_TAG ] && MODULES_TAG=$(git ls-remote -tq --sort=-v:refname https://github.com/MISP/misp-modules.git | grep -Posm1 'v2\.\d+\.\d+') && echo ASSISTED
+    RUN echo $MODULES_TAG && echo $MODULES_TEST
     RUN <<-EOF
         if [ ! -z ${MODULES_COMMIT} ]; then
             git clone https://github.com/MISP/misp-modules.git /srv/misp-modules && cd /srv/misp-modules && git checkout ${MODULES_COMMIT}
