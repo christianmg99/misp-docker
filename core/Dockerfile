@@ -174,7 +174,6 @@ FROM "${DOCKER_HUB_PROXY}debian:stable-slim"
         libldap-common \
         librdkafka1 \
         libbrotli1 \
-        libsimdjson5 \
         libzstd1 \
         # Unsure we need these
         zip unzip \
