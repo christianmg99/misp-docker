@@ -24,7 +24,7 @@ FROM "${DOCKER_HUB_PROXY}debian:stable-slim" as composer-build
         && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
     WORKDIR /tmp
-    ADD https://raw.githubusercontent.com/MISP/MISP/${CORE_COMMIT:-${CORE_TAG}}/app/composer.json /tmp
+    ADD https://raw.githubusercontent.com/MISP/MISP/3.x/composer.json /tmp
     COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
     RUN composer config --no-interaction allow-plugins.composer/installers true
     RUN composer install
