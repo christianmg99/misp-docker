@@ -27,7 +27,7 @@ FROM "${DOCKER_HUB_PROXY}python:3.11-slim" as python-build
         if [ ! -z ${MODULES_COMMIT} ]; then
             git clone https://github.com/MISP/misp-modules.git /srv/misp-modules && cd /srv/misp-modules && git checkout ${MODULES_COMMIT}
         else
-            git clone --branch ${MODULES_TAG:-$(git ls-remote -tq --sort '-v:refname' https://github.com/MISP/misp-modules.git | grep -Posm1 'v2\.\d+\.\d+')} --depth 1 https://github.com/MISP/misp-modules.git /srv/misp-modules
+            git clone --branch ${MODULES_TAG:=$(git ls-remote -tq --sort '-v:refname' https://github.com/MISP/misp-modules.git | grep -Posm1 'v2\.\d+\.\d+')} --depth 1 https://github.com/MISP/misp-modules.git /srv/misp-modules
         fi
 
         cd /srv/misp-modules
