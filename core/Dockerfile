@@ -25,7 +25,7 @@ FROM "${DOCKER_HUB_PROXY}debian:bullseye-slim" as composer-build
         && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
     WORKDIR /tmp
-    RUN wget https://raw.githubusercontent.com/MISP/MISP/${CORE_COMMIT:-${CORE_TAG:-$(git ls-remote -tq --sort '-v:refname' https://github.com/MISP/MISP.git | grep -Posm1 'v2\.\d+\.\d+')}}/app/composer.json -qP /tmp
+    RUN wget https://raw.githubusercontent.com/MISP/MISP/${CORE_COMMIT:-${CORE_TAG:-$(git ls-remote -tq --sort '-v:refname' https://github.com/MISP/MISP.git | grep -Posm1 "v2\.\d+\.\d+")}}/app/composer.json -qP /tmp
     COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
     RUN composer config --no-interaction allow-plugins.composer/installers true
     RUN composer install
