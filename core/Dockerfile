@@ -21,10 +21,11 @@ FROM "${DOCKER_HUB_PROXY}debian:bullseye-slim" as composer-build
         php-fpm \
         php-zip \
         unzip \
+        wget \
         && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
     WORKDIR /tmp
-    ADD https://raw.githubusercontent.com/MISP/MISP/${CORE_COMMIT:-${CORE_TAG}}/app/composer.json /tmp
+    RUN wget https://raw.githubusercontent.com/MISP/MISP/${CORE_COMMIT:-${CORE_TAG:-$(git ls-remote -tq --sort '-v:refname' https://github.com/MISP/MISP.git | grep -Posm1 'v2\.\d+\.\d+')}}/app/composer.json -qP /tmp
     COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
     RUN composer config --no-interaction allow-plugins.composer/installers true
     RUN composer install
@@ -62,6 +63,7 @@ FROM "${DOCKER_HUB_PROXY}debian:bullseye-slim" as php-build
     RUN cp "/usr/lib/$(gcc -dumpmachine)"/libfuzzy.* /usr/lib; pecl channel-update pecl.php.net && pecl install ssdeep && pecl install rdkafka && pecl install simdjson && pecl install zstd
     RUN git clone --recursive --depth=1 https://github.com/kjdev/php-ext-brotli.git && \
         cd php-ext-brotli && phpize && ./configure && make && make install
+    RUN find /usr/lib/php -type f -regextype egrep ! -regex '/usr/lib/php/[0-9]{8}/(ssdeep|rdkafka|brotli|simdjson|zstd)\.so' -delete -o -type d -empty -delete
 
 FROM "${DOCKER_HUB_PROXY}debian:bullseye-slim" as python-build
     ENV DEBIAN_FRONTEND noninteractive   
@@ -84,10 +86,10 @@ FROM "${DOCKER_HUB_PROXY}debian:bullseye-slim" as python-build
     
     # Download MISP using git in the /var/www/ directory. Remove unnecessary items.
     RUN <<-EOF
-        if [ ! -z "${CORE_COMMIT}" ]; then
+        if [ ! -z ${CORE_COMMIT} ]; then
             git clone https://github.com/MISP/MISP.git /var/www/MISP && cd /var/www/MISP && git checkout "${CORE_COMMIT}"
         else
-            git clone --branch "${CORE_TAG}" --depth 1 https://github.com/MISP/MISP.git /var/www/MISP
+            git clone --branch ${CORE_TAG:-$(git ls-remote -tq --sort '-v:refname' https://github.com/MISP/MISP.git | grep -Posm1 'v2\.\d+\.\d+')} --depth 1 https://github.com/MISP/MISP.git /var/www/MISP
         fi
 
         cd /var/www/MISP || exit; git submodule update --init --recursive .
@@ -138,7 +140,6 @@ FROM "${DOCKER_HUB_PROXY}debian:bullseye-slim"
     ENV DEBIAN_FRONTEND noninteractive
     ARG CORE_TAG
     ARG CORE_COMMIT
-    ARG PHP_VER
 
     RUN apt-get update; apt-get install -y --no-install-recommends \
         procps \
@@ -187,7 +188,7 @@ FROM "${DOCKER_HUB_PROXY}debian:bullseye-slim"
     RUN pip3 install --no-cache-dir /wheels/*.whl && rm -rf /wheels
 
     # PHP: install prebuilt libraries, then install the app's PHP deps
-    COPY --from=php-build ["/usr/lib/php/${PHP_VER}/ssdeep.so", "/usr/lib/php/${PHP_VER}/rdkafka.so", "/usr/lib/php/${PHP_VER}/brotli.so", "/usr/lib/php/${PHP_VER}/simdjson.so", "/usr/lib/php/${PHP_VER}/zstd.so", "/usr/lib/php/${PHP_VER}/"]
+    COPY --from=php-build /usr/lib/php /usr/lib/php
 
     # Do an early chown to limit image size
     COPY --from=python-build --chown=www-data:www-data --chmod=0550 /var/www/MISP /var/www/MISP
